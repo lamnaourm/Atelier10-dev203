@@ -38,7 +38,11 @@ routes.post('/buy', (req, res) => {
 
     ModelProduct.find({_id: {$in:liste}}).then((p) => {
         channel.sendToQueue(queueName1, Buffer.from(JSON.stringify(p)))
-        res.json(p);
+        
+        channel.consume(queueName2, (data) => {
+            res.json(JSON.parse(data.content.toString()))
+            channel.ack(data)
+        })
     }).catch((err) => {
         res.status(520).send('Insertion Impossible')
     })
