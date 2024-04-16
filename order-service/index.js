@@ -22,7 +22,7 @@ const queueName1='order-service-queue'
 const queueName2='product-service-queue'
 
 async function connectToRabbitMQ() {
-    const amqpServer = process.env.rabbitMQ;
+    const amqpServer = 'amqp://guest:guest@rabbit:5672'
     connection = await amqp.connect(amqpServer);
     channel = await connection.createChannel();
     await channel.assertQueue(queueName1);
@@ -34,7 +34,7 @@ async function connectToRabbitMQ() {
         const products = JSON.parse(data.content.toString())
         const total = products.reduce((som, p) => som+p.price, 0)
         const order = {products, total}
-        
+
         OrderSchema.create(order).then((o) =>{
             channel.sendToQueue(queueName2, Buffer.from(JSON.stringify(o)))
         }).catch((e) => {
@@ -42,6 +42,8 @@ async function connectToRabbitMQ() {
         })
         channel.ack(data)
     })
+ }).catch((e) => {
+    console.log('Not connected to rabbitMQ : ' + e)
  })
 
 
